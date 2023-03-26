@@ -8,9 +8,14 @@ class Settings extends Model
 {
     protected $fillable = [
         'user_id',
-        'timezone',
-        'language',
-        'currency',
+        'updated_at',
+        'first_name',
+        'last_name',
+        'phone_number',
+        'avatar_link',
+        'zip_code',
+        'city',
+        'address'
     ];
 
     public function user()

@@ -5,8 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
@@ -29,9 +27,16 @@ class AuthController extends Controller
             'password' => bcrypt($request->password),
         ]);
 
-        $token = $user->createToken('auth-token')->plainTextToken;
+        $token = $user->createToken('Laravel')->accessToken;
 
-        return response()->json(['token' => $token], 200);
+        $userData = [
+            "email" => $user->email,
+            "fullName" => $user->username,
+            "username" => $user->username,
+            "id" => $user->id,
+        ];
+
+        return response()->json(['accessToken' => $token, 'userData' => $userData],  200);
     }
 
     public function login(Request $request)
@@ -45,73 +50,28 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            return response()->json(['message' => 'Invalid login credentials'], 401);
+        if (auth()->attempt($request->only('email', 'password'))) {
+            $token = auth()->user()->createToken('Laravel')->accessToken;
+            $user = new User();
+            $user = $user->where('email', $request->email)->first();
+            $userData = [
+                "email" => $user->email,
+                "fullName" => $user->username,
+                "username" => $user->username,
+                "avatar" => $user->settings->avatar_link ?? '',
+                "id" => $user->id,
+            ];
+            return response()->json(['accessToken' => $token, 'userData' => $userData],  200);
         }
 
-        $user = Auth::user();
-        $token = $user->createToken('auth-token')->plainTextToken;
-
-        return response()->json(['token' => $token], 200);
-    }
-
-    public function forgotPassword(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => ['required', 'email'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $status = Password::sendResetLink($request->only('email'));
-
-        if ($status === Password::RESET_LINK_SENT) {
-            return response()->json(['message' => 'Password reset link sent'], 200);
-        }
-
-        return response()->json(['message' => 'Failed to send password reset link'], 422);
-    }
-
-    public function resetPassword(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-            'token' => ['required', 'string'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
-        }
-
-        $status = Password::reset(
-            $request->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user, $password) {
-                $user->forceFill([
-                    'password' => bcrypt($password),
-                    'remember_token' => \Illuminate\Support\Str::random(60),
-                ])->save();
-            }
-        );
-
-        if ($status === Password::PASSWORD_RESET) {
-            return response()->json(['message' => 'Password reset successfully'], 200);
-        }
-
-        return response()->json(['message' => 'Failed to reset password'], 422);
+        return response()->json(['error' => 'Unauthorised'], 401);
     }
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json(['message' => 'Logged out successfully'], 200);
-    }
-
-    public function validateToken(Request $request)
-    {
-        return response()->json(['userStatus' => true]);
+        $request->user()->token()->revoke();
+        return response()->json([
+            'message' => 'Successfully logged out'
+        ], 200);
     }
 }
