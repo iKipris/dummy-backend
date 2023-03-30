@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Helpers\GenericHelpers;
 use App\Http\Controllers\Controller;
 use App\Models\Settings;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Log;
@@ -13,11 +14,10 @@ use function Psy\debug;
 
 class SettingsController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
         // Maybe this should be in a Request class specificly for this request?
         $settings = $request->user()->settings;
-        Log::debug(var_export($settings, true));
         $settingsData = [];
         //Resources? no time
         if ($settings) {

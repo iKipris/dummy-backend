@@ -16,6 +16,11 @@ return new class extends Migration
         Schema::create('analytics', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+            $table->unsignedBigInteger('user_id');
+            $table->date('data_date');
+            $table->integer('clicks')->nullable();
+            $table->integer('requests')->nullable();
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 

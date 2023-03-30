@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\SettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -27,4 +28,6 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/settings', [SettingsController::class, 'index']);
     Route::post('/settings', [SettingsController::class, 'store']);
+    Route::get('/analytics/marketing', [AnalyticsController::class, 'indexMarketing']);
+    Route::get('/analytics/general', [AnalyticsController::class, 'indexGeneral']);
 });
