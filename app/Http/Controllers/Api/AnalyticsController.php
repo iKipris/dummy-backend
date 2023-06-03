@@ -12,21 +12,23 @@ class AnalyticsController extends Controller
     {
         $requestData = $request->all();
         $user = $request->user();
-        $analytics = $user->analytics->where('user_id', $user->id)->whereBetween('data_date', [$requestData['startDate'], $requestData['endDate'] ?? $requestData['startDate']])->get()->toArray();
         $responseClickData = [];
         $responseRequestData = [];
-        //Resources? no time
-        if ($analytics) {
-            foreach ($analytics as $item) {
-                $responseClickData[] = [
-                    'x' => $item['data_date'] . ' GMT',
-                    'y' => $item['clicks'],
-                ];
-                $responseRequestData[] = [
-                    'x' => $item['data_date'] . ' GMT',
-                    'y' => $item['requests'],
-                ];
+        if ($user && $user->analytics) {
+            $analytics = $user->analytics->where('user_id', $user->id)->whereBetween('data_date', [$requestData['startDate'], $requestData['endDate'] ?? $requestData['startDate']])->get()->toArray();
+            if ($analytics) {
+                foreach ($analytics as $item) {
+                    $responseClickData[] = [
+                        'x' => $item['data_date'] . ' GMT',
+                        'y' => $item['clicks'],
+                    ];
+                    $responseRequestData[] = [
+                        'x' => $item['data_date'] . ' GMT',
+                        'y' => $item['requests'],
+                    ];
+                }
             }
+            return response()->json(['clicks' => $responseClickData, 'requests' => $responseRequestData]);
         }
         return response()->json(['clicks' => $responseClickData, 'requests' => $responseRequestData]);
     }
@@ -44,11 +46,14 @@ class AnalyticsController extends Controller
         $events = random_int(1, 150);
         $impressions = 0;
         $user = $request->user();
-        $analytics = $user->analytics->where('user_id', $user->id)->get()->toArray();
 
-        if ($analytics) {
-            foreach ($analytics as $item) {
-                $impressions += $item['clicks'];
+        if ($user && $user->analytics) {
+            $analytics = $user->analytics()->where('user_id', $user->id)->get()->toArray();
+
+            if ($analytics) {
+                foreach ($analytics as $item) {
+                    $impressions += $item['clicks'];
+                }
             }
         }
 
@@ -62,6 +67,7 @@ class AnalyticsController extends Controller
             "events"       => $events,
             "impressions"  => $impressions,
         ];
+
 
         return response()->json($settingsData);
     }

@@ -9,9 +9,12 @@ class CalendarEvent extends Model
     protected $fillable = [
         'user_id',
         'title',
+        'calendar',
+        'url',
+        'guests',
         'description',
-        'start_time',
-        'end_time',
+        'start',
+        'end',
     ];
 
     public function user()

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AnalyticsController;
+use App\Http\Controllers\Api\CalendarController;
 use App\Http\Controllers\Api\SettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,4 +31,9 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/settings', [SettingsController::class, 'store']);
     Route::get('/analytics/marketing', [AnalyticsController::class, 'indexMarketing']);
     Route::get('/analytics/general', [AnalyticsController::class, 'indexGeneral']);
+    Route::get('/calendar/events', [CalendarController::class, 'index']);
+    Route::post('/calendar/events', [CalendarController::class, 'store']);
+    Route::post('/calendar/events/{id}', [CalendarController::class, 'update']);
+    Route::delete('/calendar/events/{id}', [CalendarController::class, 'delete']);
+    Route::post('/change-password', [AuthController::class, 'changePassword']);
 });
