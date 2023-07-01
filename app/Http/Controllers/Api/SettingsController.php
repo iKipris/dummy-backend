@@ -38,12 +38,6 @@ class SettingsController extends Controller
     {
         $user_id = $request->user()->id;
         $requestData = $request->all();
-        $settings = new Settings();
-        if ($requestData['avatar']) {
-            $link = GenericHelpers::ImageTolink($requestData['avatar']);
-        } else {
-            $link = '';
-        }
 
         $settings = Settings::updateOrCreate(
             ['user_id' => $user_id],
@@ -51,7 +45,7 @@ class SettingsController extends Controller
                 'first_name' => $requestData['firstName'],
                 'last_name' => $requestData['lastName'],
                 'phone_number' => $requestData['phone'],
-                'avatar_link' => $link,
+                'avatar_link' => $requestData['avatar'] ?? '',
                 'zip_code' => $requestData['zipCode'],
                 'address' => $requestData['address'],
                 'city' => $requestData['city'],

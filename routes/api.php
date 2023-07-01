@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\CalendarController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\UploadFileToS3Controller;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -36,4 +37,5 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/calendar/events/{id}', [CalendarController::class, 'update']);
     Route::delete('/calendar/events/{id}', [CalendarController::class, 'delete']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
+    Route::post('/upload/file', [UploadFileToS3Controller::class, 'upload']);
 });
