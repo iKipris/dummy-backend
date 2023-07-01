@@ -8,10 +8,7 @@ class Listing extends Model
 {
     protected $fillable = [
         'user_id',
-        'title',
-        'description',
-        'price',
-        'location',
+        'listing_data',
     ];
 
     public function user()

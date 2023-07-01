@@ -2,15 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Helpers\GenericHelpers;
 use App\Http\Controllers\Controller;
 use App\Models\Settings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
-use Illuminate\Support\Facades\Log;
-
-use function Psy\debug;
 
 class SettingsController extends Controller
 {
