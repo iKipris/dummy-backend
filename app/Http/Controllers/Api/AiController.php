@@ -20,7 +20,7 @@ class AiController extends Controller
             $ai = [
                 "profileUser" => [
                     "id" => $aiData->user_id,
-                    "avatar" => $aiData->avatar,
+                    "avatar" => $settings->avatar_link,
                 ],
                 "chats" => json_decode($aiData->chats)
             ];
@@ -58,12 +58,5 @@ class AiController extends Controller
         );
 
         return response()->json($ai);
-    }
-
-    public function addMessage(Request $request): JsonResponse
-    {
-        // get user_id from request and sender_id which is always the same with chat_id return message
-        $user_id = $request->user()->id;
-        $requestData = $request->all();
     }
 }

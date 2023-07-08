@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\CalendarController;
 use App\Http\Controllers\Api\ListingController;
 use App\Http\Controllers\Api\AiController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\UploadFileToS3Controller;
 use Illuminate\Support\Facades\Route;
 
@@ -29,8 +30,8 @@ Route::get('/validate-token', [AuthController::class, 'validateToken']);
 
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/settings', [AiController::class, 'index']);
-    Route::post('/settings', [AiController::class, 'store']);
+    Route::get('/settings', [SettingsController::class, 'index']);
+    Route::post('/settings', [SettingsController::class, 'store']);
     Route::post('/listings', [ListingController::class, 'store']);
     Route::get('/listings', [ListingController::class, 'index']);
     Route::post('/listings/publish', [ListingController::class, 'publish']);
@@ -44,7 +45,6 @@ Route::middleware('auth:api')->group(function () {
     Route::delete('/calendar/events/{id}', [CalendarController::class, 'delete']);
     Route::post('/change-password', [AuthController::class, 'changePassword']);
     Route::post('/upload/file', [UploadFileToS3Controller::class, 'upload']);
-    Route::post('/ai/add/message', [AiController::class, 'addMessage']);
     Route::post('/ai/chat/store', [AiController::class, 'storeChat']);
     Route::get('/ai/chats', [AiController::class, 'index']);
 });
