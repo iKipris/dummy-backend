@@ -39,6 +39,9 @@ class AiController extends Controller
         return response()->json($ai);
     }
 
+    /**
+     * @throws \JsonException
+     */
     public function storeChat(Request $request): JsonResponse
     {
         $user_id = $request->user()->id;
