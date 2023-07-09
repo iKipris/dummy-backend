@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\CalendarController;
+use App\Http\Controllers\Api\CasesController;
 use App\Http\Controllers\Api\ListingController;
 use App\Http\Controllers\Api\AiController;
 use App\Http\Controllers\Api\SettingsController;
@@ -47,4 +48,8 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/upload/file', [UploadFileToS3Controller::class, 'upload']);
     Route::post('/ai/chat/store', [AiController::class, 'storeChat']);
     Route::get('/ai/chats', [AiController::class, 'index']);
+
+    Route::get('/cases', [CasesController::class, 'indexCases']);
+    Route::get('/case', [CasesController::class, 'indexCase']);
+    Route::post('/case/create', [CasesController::class, 'createCase']);
 });

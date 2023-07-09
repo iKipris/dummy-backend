@@ -8,9 +8,7 @@ class Cases extends Model
 {
     protected $fillable = [
         'user_id',
-        'title',
-        'description',
-        'status',
+        'case_properties',
     ];
 
     public function user()

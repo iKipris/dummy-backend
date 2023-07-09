@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Ai;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class AiController extends Controller
 {
@@ -20,7 +19,7 @@ class AiController extends Controller
             $ai = [
                 "profileUser" => [
                     "id" => $aiData->user_id,
-                    "avatar" => $settings->avatar_link,
+                    "avatar" => $settings->avatar_link ?? '',
                 ],
                 "chats" => json_decode($aiData->chats)
             ];
@@ -52,7 +51,7 @@ class AiController extends Controller
             ['user_id' => $user_id],
             [
                 'user_id' => $user_id,
-                'avatar_link' => $avatar_link,
+                'avatar_link' => $avatar_link ?? '',
                 'chats' => $chats,
             ]
         );
