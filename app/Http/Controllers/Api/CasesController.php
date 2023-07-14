@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cases;
-use App\Models\Settings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class CasesController extends Controller
 {
@@ -46,7 +44,9 @@ class CasesController extends Controller
                     JSON_THROW_ON_ERROR,
                     512,
                     JSON_THROW_ON_ERROR
-                )
+                ),
+                'id' => $case->id,
+                'caseNotes' => $case->case_notes
             ];
         }
         return response()->json($responseData);
@@ -84,5 +84,52 @@ class CasesController extends Controller
         }
 
         return response()->json(['error' => 'New case could not be created'], 400);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public function editCase(Request $request): JsonResponse
+    {
+        $user_id = $request->user()->id;
+        $case = Cases::where('id', $request->get('caseId'))->where('user_id', $user_id)->first();
+        $caseProperties = $request->get('caseProperties');
+        if ($case) {
+            $case->case_properties = $caseProperties;
+            $case->save();
+            return response()->json($caseProperties);
+        }
+        return response()->json(['error' => 'Case properties could not be edited'], 400);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public function storeCaseNotes(Request $request): JsonResponse
+    {
+        $user_id = $request->user()->id;
+        $case = Cases::where('id', $request->get('caseId'))->where('user_id', $user_id)->first();
+        $caseNotes = $request->get('caseNotes');
+
+        if ($case) {
+            $case->case_notes = $caseNotes;
+            $case->save();
+            return response()->json($caseNotes);
+        }
+        return response()->json(['error' => 'Case properties could not be edited'], 400);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public function deleteCase(Request $request): JsonResponse
+    {
+        $user_id = $request->user()->id;
+        $case = Cases::where('id', $request->get('caseId'))->where('user_id', $user_id)->first();
+        if ($case) {
+            $case->delete();
+            return response()->json();
+        }
+        return response()->json(['error' => 'Case could not be deleted'], 400);
     }
 }
