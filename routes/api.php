@@ -55,4 +55,9 @@ Route::middleware('auth:api')->group(function () {
     Route::post('/case/edit', [CasesController::class, 'editCase']);
     Route::post('/case/delete', [CasesController::class, 'deleteCase']);
     Route::post('/case/store/notes', [CasesController::class, 'storeCaseNotes']);
+    Route::post('/case/files/upload', [CasesController::class, 'uploadMultipleCaseFiles']);
+    Route::post('/case/files/add', [CasesController::class, 'addCaseFiles']);
+    Route::get('/case/files', [CasesController::class, 'indexCaseFiles']);
+    Route::post('/case/file/edit', [CasesController::class, 'editFileInfo']);
+    Route::post('/case/file/delete', [CasesController::class, 'deleteFile']);
 });

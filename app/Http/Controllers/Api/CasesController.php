@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Cases;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CasesController extends Controller
 {
@@ -46,7 +48,8 @@ class CasesController extends Controller
                     JSON_THROW_ON_ERROR
                 ),
                 'id' => $case->id,
-                'caseNotes' => $case->case_notes
+                'caseNotes' => $case->case_notes,
+                'caseFiles' => $case->case_files
             ];
         }
         return response()->json($responseData);
@@ -131,5 +134,170 @@ class CasesController extends Controller
             return response()->json();
         }
         return response()->json(['error' => 'Case could not be deleted'], 400);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public function addCaseFiles(Request $request): JsonResponse
+    {
+        $user_id = $request->user()->id;
+        $caseId = $request->get('caseId');
+        $caseFiles = $request->get('caseFiles');
+        $case = Cases::where('id', $caseId)->where('user_id', $user_id)->first();
+
+        if ($case) {
+            foreach ($caseFiles as $file) {
+                $fileData = [
+                    "id"          => Str::random(20),
+                    "name"        => $file['name'],
+                    "description" => '',
+                    "url"         => $file['url'],
+                    "type"        => $file['type'],
+                    "status"      => 'inactive',
+                ];
+
+                $existingCaseFiles = json_decode($case->case_files, true) ?? [];
+                $existingCaseFiles[] = $fileData;
+
+                $case->case_files = json_encode($existingCaseFiles);
+                $case->save();
+            }
+
+            return response()->json();
+        }
+
+        return response()->json(['error' => 'Case files could not be added'], 400);
+    }
+
+    /**
+     */
+    public function uploadMultipleCaseFiles(Request $request): JsonResponse
+    {
+        $caseFile = $request->get('file');
+        $fileName = $request->get('fileName');
+
+        return $this->upload($caseFile,$fileName);
+    }
+
+    public function upload($file, $fileName)
+    {
+        if ($file) {
+            $base64File = $file;
+
+            $fileData = explode(',', $base64File);
+
+            if (count($fileData) !== 2) {
+                return response()->json(['error' => 'Invalid base64 file data.'], 400);
+            }
+
+            $fileData = base64_decode($fileData[1]);
+            $fileType = $this->detectFileType($fileData);
+            $name = $fileName . '_' . time() . '.' . $fileType;
+
+            Storage::disk('s3')->put($name, $fileData);
+
+            return response()->json(['url' => Storage::disk('s3')->url($name), 'name' => $fileName, 'type' => $fileType]);
+
+        }
+
+        return response()->json(['error' => 'Files could not be uploaded.'], 400);
+    }
+
+    private function detectFileType($fileData): string
+    {
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $fileType = finfo_buffer($finfo, $fileData);
+        finfo_close($finfo);
+
+        // Extract the file extension from the MIME type
+        $extensions = [
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'application/pdf' => 'pdf',
+            'application/msword' => 'doc',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
+            'application/vnd.ms-excel' => 'xls',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
+            'application/vnd.ms-powerpoint' => 'ppt',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
+            'application/zip' => 'zip',
+            'text/plain' => 'txt',
+            // Add more MIME types and their corresponding extensions as needed
+        ];
+
+        return $extensions[$fileType] ?? 'file';
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public function indexCaseFiles(Request $request): JsonResponse
+    {
+        $user_id = $request->user()->id;
+        $caseId = $request->get('caseId');
+        $case = Cases::where('id', $caseId)->where('user_id', $user_id)->first();
+        $caseFiles = json_decode($case->case_files) ?? [];
+        return response()->json($caseFiles);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public function editFileInfo(Request $request): JsonResponse
+    {
+        $user_id = $request->user()->id;
+        $caseId = $request->get('caseId');
+        $fileName = $request->get('fileName');
+        $fileDescription = $request->get('fileDescription');
+        $fileStatus = $request->get('fileStatus');
+        $fileId = $request->get('fileId');
+
+        $case = Cases::where('id', $caseId)->where('user_id', $user_id)->first();
+
+        if ($case) {
+            $existingCaseFiles = json_decode($case->case_files, true, 512, JSON_THROW_ON_ERROR) ?? [];
+            foreach ($existingCaseFiles as $key=>$file) {
+                if ($file["id"] === $fileId) {
+                    $existingCaseFiles[$key]["description"] = $fileDescription ?? "";
+                    $existingCaseFiles[$key]["status"] = $fileStatus;
+                    $existingCaseFiles[$key]["name"] = $fileName;
+                }
+            }
+            $case->case_files = json_encode($existingCaseFiles, JSON_THROW_ON_ERROR);
+            $case->save();
+
+            return response()->json();
+        }
+
+        return response()->json(['error' => 'Case files could not be added'], 400);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public function deleteFile(Request $request): JsonResponse
+    {
+        $user_id = $request->user()->id;
+        $caseId = $request->get('caseId');
+        $fileId = $request->get('fileId');
+
+        $case = Cases::where('id', $caseId)->where('user_id', $user_id)->first();
+
+        if ($case) {
+            $existingCaseFiles = json_decode($case->case_files, true, 512, JSON_THROW_ON_ERROR) ?? [];
+            foreach ($existingCaseFiles as $key=>$file) {
+                if ($file["id"] === $fileId) {
+                    array_splice($existingCaseFiles, $key, 1);
+                }
+            }
+            $case->case_files = json_encode($existingCaseFiles, JSON_THROW_ON_ERROR);
+            $case->save();
+
+            return response()->json();
+        }
+
+        return response()->json(['error' => 'Case files could not be added'], 400);
     }
 }
