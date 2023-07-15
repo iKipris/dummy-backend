@@ -10,6 +10,8 @@ class Cases extends Model
         'user_id',
         'case_properties',
         'case_files',
+        'case_members',
+        'case_notes'
     ];
 
     public function user()

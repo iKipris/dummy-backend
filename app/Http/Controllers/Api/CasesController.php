@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Cases;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -171,6 +172,39 @@ class CasesController extends Controller
     }
 
     /**
+     * @throws \JsonException
+     */
+    public function addCaseMember(Request $request): JsonResponse
+    {
+        $user_id = $request->user()->id;
+        $caseId = $request->get('caseId');
+        $caseMember = $request->get('caseMember');
+        $case = Cases::where('id', $caseId)->where('user_id', $user_id)->first();
+
+        if ($case) {
+            $memberData = [
+                "id"          => Str::random(20),
+                "firstName"   => $caseMember['firstName'],
+                "lastName"   => $caseMember['lastName'],
+                "description" => $caseMember['description'],
+                "email"         => $caseMember['email'],
+                "phone"        => $caseMember['phone'],
+                "status"      => $caseMember['status'],
+            ];
+
+            $existingCaseMembers = json_decode($case->case_members, true) ?? [];
+            $existingCaseMembers[] = $memberData;
+
+            $case->case_members = json_encode($existingCaseMembers);
+            $case->save();
+
+            return response()->json();
+        }
+
+        return response()->json(['error' => 'Member could not be added'], 400);
+    }
+
+    /**
      */
     public function uploadMultipleCaseFiles(Request $request): JsonResponse
     {
@@ -299,5 +333,75 @@ class CasesController extends Controller
         }
 
         return response()->json(['error' => 'Case files could not be added'], 400);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public function deleteMember(Request $request): JsonResponse
+    {
+        $user_id = $request->user()->id;
+        $caseId = $request->get('caseId');
+        $memberId = $request->get('memberId');
+
+        $case = Cases::where('id', $caseId)->where('user_id', $user_id)->first();
+
+        if ($case) {
+            $existingCaseMembers = json_decode($case->case_members, true, 512, JSON_THROW_ON_ERROR) ?? [];
+            foreach ($existingCaseMembers as $key=>$file) {
+                if ($file["id"] === $memberId) {
+                    array_splice($existingCaseMembers, $key, 1);
+                }
+            }
+            $case->case_members = json_encode($existingCaseMembers, JSON_THROW_ON_ERROR);
+            $case->save();
+
+            return response()->json();
+        }
+
+        return response()->json(['error' => 'Case member could not be deleted'], 400);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public function indexCaseMembers(Request $request): JsonResponse
+    {
+        $user_id = $request->user()->id;
+        $caseId = $request->get('caseId');
+        $case = Cases::where('id', $caseId)->where('user_id', $user_id)->first();
+        $caseMembers = json_decode($case->case_members) ?? [];
+        return response()->json($caseMembers);
+    }
+
+    /**
+     * @throws \JsonException
+     */
+    public function editMemberInfo(Request $request): JsonResponse
+    {
+        $user_id = $request->user()->id;
+        $caseId = $request->get('caseId');
+        $memberData = $request->get('memberData');
+        $case = Cases::where('id', $caseId)->where('user_id', $user_id)->first();
+
+        if ($case) {
+            $existingCaseMembers = json_decode($case->case_members, true, 512, JSON_THROW_ON_ERROR) ?? [];
+            foreach ($existingCaseMembers as $key=>$member) {
+                if ($member["id"] === $memberData["id"]) {
+                    $existingCaseMembers[$key]["description"] = $memberData["description"] ?? "";
+                    $existingCaseMembers[$key]["status"] = $memberData["status"];
+                    $existingCaseMembers[$key]["firstName"] = $memberData["firstName"];
+                    $existingCaseMembers[$key]["lastName"] = $memberData["lastName"];
+                    $existingCaseMembers[$key]["phone"] = $memberData["phone"];
+                    $existingCaseMembers[$key]["email"] = $memberData["email"];
+                }
+            }
+            $case->case_members = json_encode($existingCaseMembers, JSON_THROW_ON_ERROR);
+            $case->save();
+
+            return response()->json();
+        }
+
+        return response()->json(['error' => 'Case member could not be edited'], 400);
     }
 }

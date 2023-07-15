@@ -60,4 +60,8 @@ Route::middleware('auth:api')->group(function () {
     Route::get('/case/files', [CasesController::class, 'indexCaseFiles']);
     Route::post('/case/file/edit', [CasesController::class, 'editFileInfo']);
     Route::post('/case/file/delete', [CasesController::class, 'deleteFile']);
+    Route::post('/case/member/add', [CasesController::class, 'addCaseMember']);
+    Route::get('/case/members', [CasesController::class, 'indexCaseMembers']);
+    Route::post('/case/member/delete', [CasesController::class, 'deleteMember']);
+    Route::post('/case/member/edit', [CasesController::class, 'editMemberInfo']);
 });
